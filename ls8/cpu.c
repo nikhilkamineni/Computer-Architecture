@@ -47,11 +47,26 @@ void cpu_run(struct cpu *cpu)
   int running = 1; // True until we get a HLT instruction
 
   while (running) {
-    // TODO
     // 1. Get the value of the current instruction (in address PC).
+    unsigned char IR = cpu->ram[cpu->PC];
+
+    unsigned char operandA = cpu->ram[cpu->PC + 1];
+    unsigned char operandB = cpu->ram[cpu->PC + 2];
+
     // 2. switch() over it to decide on a course of action.
-    // 3. Do whatever the instruction should do according to the spec.
+    switch(IR) {
+      // 3. Do whatever the instruction should do according to the spec.
+      case LDI:
+        cpu->reg[operandA] = operandB;
+    }
     // 4. Move the PC to the next instruction.
+    // Check if instruction sets the PC
+    int instruction_sets_PC = (IR >> 4) & 1;
+
+    if (!instruction_sets_PC)
+      // Get the number of operands from bit 7 & 8 or IR and increment PC
+      cpu->PC += ((IR >> 6) & 0b00000011) + 1;
+
   }
 }
 
