@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "cpu.h"
 
 /**
@@ -20,26 +21,31 @@ void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value)
 /**
  * Load the binary bytes from a .ls8 source file into a RAM array
  */
-void cpu_load(struct cpu *cpu)
+void cpu_load(struct cpu *cpu, char *filename)
 {
-  const int DATA_LEN = 6;
-  char data[DATA_LEN] = {
-    // From print8.ls8
-    0b10000010, // LDI R0,8
-    0b00000000,
-    0b00001000,
-    0b01000111, // PRN R0
-    0b00000000,
-    0b00000001  // HLT
-  };
+  // Read instructions from a file provided by argv
+  FILE *fp;
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t linelen;
 
-  int address = 0;
+  fp = fopen(filename, "r");
 
-  for (int i = 0; i < DATA_LEN; i++) {
-    cpu->ram[address++] = data[i];
+  if (!fp) {
+    printf("Failed to open file\n");
+    exit(2);
   }
 
-  // TODO: Replace this with something less hard-coded
+  int line_num = 0;
+  while ((linelen = getline(&line, &len, fp)) != -1) {
+    if (*line != '\n' && *line != '#') {
+      line[8] = '\0';
+      cpu_ram_write(cpu, cpu->PC + line_num, strtoul(line, NULL, 2));
+      line_num++;
+    }
+  }
+
+  fclose(fp);
 }
 
 /**
