@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "cpu.h"
 
 /**
@@ -58,13 +59,18 @@ void cpu_run(struct cpu *cpu)
       // 3. Do whatever the instruction should do according to the spec.
       case LDI:
         cpu->reg[operandA] = operandB;
+      case PRN:
+        printf("%d\n", cpu->reg[operandA]);
+      case HLT:
+        running = 0;
     }
     // 4. Move the PC to the next instruction.
-    // Check if instruction sets the PC
-    int instruction_sets_PC = (IR >> 4) & 1;
+    // Check if instruction sets the PC using bit 4 of IR
+    int instruction_sets_PC = (IR >> 4) & 0b00000001;
 
     if (!instruction_sets_PC)
-      // Get the number of operands from bit 7 & 8 or IR and increment PC
+      // Get the number of operands from the two highest bits of IR 
+      // and increment PC that number of times plus one
       cpu->PC += ((IR >> 6) & 0b00000011) + 1;
 
   }
@@ -76,6 +82,7 @@ void cpu_run(struct cpu *cpu)
 void cpu_init(struct cpu *cpu)
 {
   // TODO: Initialize the PC and other special registers
+  cpu->PC = 0;
 
   // TODO: Zero registers and RAM
 }
@@ -83,7 +90,7 @@ void cpu_init(struct cpu *cpu)
 /**
  * Read a value from ram from the address provided
  */
-char cpu_ram_read(struct cpu *cpu, unsigned char address)
+unsigned char cpu_ram_read(struct cpu *cpu, unsigned char address)
 {
   return cpu->ram[address];
 }
