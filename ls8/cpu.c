@@ -2,6 +2,22 @@
 #include "cpu.h"
 
 /**
+ * Read a value from ram from the address provided
+ */
+unsigned char cpu_ram_read(struct cpu *cpu, unsigned char address)
+{
+  return cpu->ram[address];
+}
+
+/**
+ * Write a given value to the ram address provided
+ */
+void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value)
+{
+  cpu->ram[address] = value;
+}
+
+/**
  * Load the binary bytes from a .ls8 source file into a RAM array
  */
 void cpu_load(struct cpu *cpu)
@@ -49,20 +65,26 @@ void cpu_run(struct cpu *cpu)
 
   while (running) {
     // 1. Get the value of the current instruction (in address PC).
-    unsigned char IR = cpu->ram[cpu->PC];
+    /* unsigned char IR = cpu->ram[cpu->PC]; */
+    unsigned char IR = cpu_ram_read(cpu, cpu->PC);
 
-    unsigned char operandA = cpu->ram[cpu->PC + 1];
-    unsigned char operandB = cpu->ram[cpu->PC + 2];
+    unsigned char operandA = cpu_ram_read(cpu, cpu->PC + 1);
+    unsigned char operandB = cpu_ram_read(cpu, cpu->PC + 2);
 
     // 2. switch() over it to decide on a course of action.
     switch(IR) {
       // 3. Do whatever the instruction should do according to the spec.
+      case NOP:
+        continue;
       case LDI:
         cpu->reg[operandA] = operandB;
       case PRN:
         printf("%d\n", cpu->reg[operandA]);
       case HLT:
         running = 0;
+        break;
+      default:
+        printf("Did not recognize instruction %10x\n", IR);
     }
     // 4. Move the PC to the next instruction.
     // Check if instruction sets the PC using bit 4 of IR
@@ -87,18 +109,3 @@ void cpu_init(struct cpu *cpu)
   // TODO: Zero registers and RAM
 }
 
-/**
- * Read a value from ram from the address provided
- */
-unsigned char cpu_ram_read(struct cpu *cpu, unsigned char address)
-{
-  return cpu->ram[address];
-}
-
-/**
- * Write a given value to the ram address provided
- */
-void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value)
-{
-  cpu->ram[address] = value;
-}
