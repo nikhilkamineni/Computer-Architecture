@@ -24,6 +24,7 @@ void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value)
 void cpu_load(struct cpu *cpu, char *filename)
 {
   // Read instructions from a file provided by argv
+  printf("%s\n", filename);
   FILE *fp;
   char *line = NULL;
   size_t len = 0;
@@ -40,7 +41,9 @@ void cpu_load(struct cpu *cpu, char *filename)
   while ((linelen = getline(&line, &len, fp)) != -1) {
     if (*line != '\n' && *line != '#') {
       line[8] = '\0';
-      cpu_ram_write(cpu, cpu->PC + line_num, strtoul(line, NULL, 2));
+      /* cpu_ram_write(cpu, line_num, strtoul(line, NULL, 2)); */
+      cpu->ram[line_num] = strtoul(line, NULL, 2);
+      /* printf("%x\n", cpu->ram[line_num]); */
       line_num++;
     }
   }
@@ -53,9 +56,18 @@ void cpu_load(struct cpu *cpu, char *filename)
  */
 void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB)
 {
+  unsigned char result;
   switch (op) {
+    case ALU_ADD:
+      result = regA + regB;
+      cpu->reg[regA] = result;
+      break;
     case ALU_MUL:
-      // TODO
+      result = cpu->reg[regA] * cpu->reg[regB];
+      cpu->reg[regA] = result;
+      break;
+    default:
+      printf("There is no ALU instruction with that code");
       break;
 
     // TODO: implement more ALU ops
@@ -71,35 +83,40 @@ void cpu_run(struct cpu *cpu)
 
   while (running) {
     // 1. Get the value of the current instruction (in address PC).
-    /* unsigned char IR = cpu->ram[cpu->PC]; */
     unsigned char IR = cpu_ram_read(cpu, cpu->PC);
 
     unsigned char operandA = cpu_ram_read(cpu, cpu->PC + 1);
     unsigned char operandB = cpu_ram_read(cpu, cpu->PC + 2);
+    /* printf("TRACE: IR: %x; opB: %x; opB: %x\n", IR, operandA, operandB); */
 
     // 2. switch() over it to decide on a course of action.
     switch(IR) {
       // 3. Do whatever the instruction should do according to the spec.
-      case NOP:
-        continue;
       case LDI:
         cpu->reg[operandA] = operandB;
+        break;
+      case ADD:
+        alu(cpu, ALU_ADD, operandA, operandB);
+        break;
+      case MUL:
+        alu(cpu, ALU_MUL, operandA, operandB);
+        break;
       case PRN:
         printf("%d\n", cpu->reg[operandA]);
+        break;
       case HLT:
         running = 0;
         break;
       default:
-        printf("Did not recognize instruction %10x\n", IR);
+        printf("Did not recognize instruction %x\n", IR);
+        break;
     }
     // 4. Move the PC to the next instruction.
     // Check if instruction sets the PC using bit 4 of IR
     int instruction_sets_PC = (IR >> 4) & 0b00000001;
 
     if (!instruction_sets_PC)
-      // Get the number of operands from the two highest bits of IR 
-      // and increment PC that number of times plus one
-      cpu->PC += ((IR >> 6) & 0b00000011) + 1;
+      cpu->PC += (IR >> 6) + 1;
 
   }
 }
@@ -109,9 +126,16 @@ void cpu_run(struct cpu *cpu)
  */
 void cpu_init(struct cpu *cpu)
 {
-  // TODO: Initialize the PC and other special registers
+  // Initialize the PC and other special registers
   cpu->PC = 0;
 
-  // TODO: Zero registers and RAM
+  // Zero registers and RAM
+  for (int i = 0; i < 8; i++) {
+    cpu->reg[i] = 0;
+  }
+
+  for (int i = 0; i < 256; i++) {
+    cpu->ram[i] = 0;
+  }
 }
 
