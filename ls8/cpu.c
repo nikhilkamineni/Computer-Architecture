@@ -137,6 +137,14 @@ void cpu_run(struct cpu *cpu)
       case PRN:
         printf("%d\n", cpu->reg[operandA]);
         break;
+      case PUSH:
+        cpu->reg[SP]--;
+        cpu_ram_write(cpu, cpu->reg[SP], cpu->reg[operandA]);
+        break;
+      case POP:
+        cpu->reg[operandA] = cpu_ram_read(cpu, cpu->reg[SP]);
+        cpu->reg[SP]++;
+        break;
       case HLT:
         running = 0;
         break;
@@ -170,5 +178,7 @@ void cpu_init(struct cpu *cpu)
   for (int i = 0; i < 256; i++) {
     cpu->ram[i] = 0;
   }
+
+  cpu->reg[SP] = 0xF4; // Initialize SP to point to empty stack
 }
 
