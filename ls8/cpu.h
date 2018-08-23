@@ -63,6 +63,7 @@ enum alu_op {
 #define PRA  0b01001000
 #define CALL 0b01010000
 #define RET  0b00010001
+#define ST   0b10000100
 
 // Function declarations
 extern void cpu_load(struct cpu *cpu, char *filename);

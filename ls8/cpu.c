@@ -123,16 +123,16 @@ void cpu_run(struct cpu *cpu)
         alu(cpu, ALU_MUL, operandA, operandB);
         break;
       case DIV:
-        alu(cpu, ALU_MUL, operandA, operandB);
+        alu(cpu, ALU_DIV, operandA, operandB);
         break;
       case MOD:
         alu(cpu, ALU_MOD, operandA, operandB);
         break;
       case INC:
-        alu(cpu, ALU_MOD, operandA, operandB);
+        alu(cpu, ALU_INC, operandA, operandB);
         break;
       case DEC:
-        alu(cpu, ALU_MOD, operandA, operandB);
+        alu(cpu, ALU_DEC, operandA, operandB);
         break;
       case PRN:
         printf("%d\n", cpu->reg[operandA]);
@@ -153,6 +153,9 @@ void cpu_run(struct cpu *cpu)
       case RET:
         cpu->PC = cpu_ram_read(cpu, cpu->reg[SP]);
         cpu->reg[SP]++;
+        break;
+      case ST:
+        cpu_ram_write(cpu, cpu->reg[operandA], cpu->reg[operandB]);
         break;
       case HLT:
         running = 0;
