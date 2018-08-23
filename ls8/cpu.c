@@ -56,16 +56,34 @@ void cpu_load(struct cpu *cpu, char *filename)
  */
 void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB)
 {
-  unsigned char result;
   switch (op) {
     case ALU_ADD:
-      result = regA + regB;
-      cpu->reg[regA] = result;
+      cpu->reg[regA] += cpu->reg[regB];
+      break;
+    case ALU_SUB:
+      cpu->reg[regA] -= cpu->reg[regB];
       break;
     case ALU_MUL:
-      result = cpu->reg[regA] * cpu->reg[regB];
-      cpu->reg[regA] = result;
+      cpu->reg[regA] *= cpu->reg[regB];
       break;
+    case ALU_DIV:
+      if (!cpu->reg[regB]) {
+        fprintf(stderr, "Value of operandB is 0!");
+        exit(1);
+      }
+      cpu->reg[regA] /= cpu->reg[regB];
+      break;
+    case ALU_MOD:
+      if (!cpu->reg[regB]) {
+        fprintf(stderr, "Value of operandB is 0!");
+        exit(1);
+      }
+      cpu->reg[regA] %= cpu->reg[regB];
+      break;
+    case ALU_INC:
+      cpu->reg[regA]++;
+    case ALU_DEC:
+      cpu->reg[regA]++;
     default:
       printf("There is no ALU instruction with that code");
       break;
@@ -98,8 +116,23 @@ void cpu_run(struct cpu *cpu)
       case ADD:
         alu(cpu, ALU_ADD, operandA, operandB);
         break;
+      case SUB:
+        alu(cpu, ALU_SUB, operandA, operandB);
+        break;
       case MUL:
         alu(cpu, ALU_MUL, operandA, operandB);
+        break;
+      case DIV:
+        alu(cpu, ALU_MUL, operandA, operandB);
+        break;
+      case MOD:
+        alu(cpu, ALU_MOD, operandA, operandB);
+        break;
+      case INC:
+        alu(cpu, ALU_MOD, operandA, operandB);
+        break;
+      case DEC:
+        alu(cpu, ALU_MOD, operandA, operandB);
         break;
       case PRN:
         printf("%d\n", cpu->reg[operandA]);
