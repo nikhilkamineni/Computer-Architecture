@@ -150,6 +150,10 @@ void cpu_run(struct cpu *cpu)
         cpu_ram_write(cpu, cpu->reg[SP], cpu->PC + 2);
         cpu->PC = cpu->reg[operandA];
         break;
+      case RET:
+        cpu->PC = cpu_ram_read(cpu, cpu->reg[SP]);
+        cpu->reg[SP]++;
+        break;
       case HLT:
         running = 0;
         break;
