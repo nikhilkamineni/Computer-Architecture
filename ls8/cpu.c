@@ -100,16 +100,15 @@ void cpu_run(struct cpu *cpu)
   int running = 1; // True until we get a HLT instruction
 
   while (running) {
-    // 1. Get the value of the current instruction (in address PC).
+    // Get the value of the current instruction (in address PC).
     unsigned char IR = cpu_ram_read(cpu, cpu->PC);
 
     unsigned char operandA = cpu_ram_read(cpu, cpu->PC + 1);
     unsigned char operandB = cpu_ram_read(cpu, cpu->PC + 2);
-    /* printf("TRACE: IR: %x; opB: %x; opB: %x\n", IR, operandA, operandB); */
 
-    // 2. switch() over it to decide on a course of action.
+    // Switch() over it to decide on a course of action.
     switch(IR) {
-      // 3. Do whatever the instruction should do according to the spec.
+      // Do whatever the instruction should do according to the spec.
       case LDI:
         cpu->reg[operandA] = operandB;
         break;
@@ -157,6 +156,13 @@ void cpu_run(struct cpu *cpu)
       case ST:
         cpu_ram_write(cpu, cpu->reg[operandA], cpu->reg[operandB]);
         break;
+      case CMP:
+        if (cpu->reg[operandA] == cpu->reg[operandB])
+          cpu->FL = 0b00000001;
+        else if (cpu->reg[operandA] < cpu->reg[operandB])
+          cpu->FL = 0b00000100;
+        else if (cpu->reg[operandA] > cpu->reg[operandB])
+          cpu->FL = 0b00000010;
       case HLT:
         running = 0;
         break;
@@ -164,13 +170,13 @@ void cpu_run(struct cpu *cpu)
         printf("Did not recognize instruction %x\n", IR);
         break;
     }
-    // 4. Move the PC to the next instruction.
+
     // Check if instruction sets the PC using bit 4 of IR
     int instruction_sets_PC = (IR >> 4) & 0b00000001;
 
+    // Move the PC to the next instruction if it doesn't set the PC
     if (!instruction_sets_PC)
       cpu->PC += (IR >> 6) + 1;
-
   }
 }
 
@@ -181,16 +187,16 @@ void cpu_init(struct cpu *cpu)
 {
   // Initialize the PC and other special registers
   cpu->PC = 0;
+  cpu->FL = 0;
 
   // Zero registers and RAM
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 8; i++)
     cpu->reg[i] = 0;
-  }
 
-  for (int i = 0; i < 256; i++) {
+  for (int i = 0; i < 256; i++)
     cpu->ram[i] = 0;
-  }
 
   cpu->reg[SP] = 0xF4; // Initialize SP to point to empty stack
+
 }
 
