@@ -167,6 +167,10 @@ void cpu_run(struct cpu *cpu)
       case JMP:
         cpu->PC = cpu->reg[operandA];
         break;
+      case JEQ:
+        if (cpu->FL == 0b00000001)
+          cpu->PC = cpu->reg[operandA];
+        break;
       case HLT:
         running = 0;
         break;
