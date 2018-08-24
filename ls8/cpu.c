@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "cpu.h"
 
 /**
@@ -105,6 +106,7 @@ void cpu_run(struct cpu *cpu)
 
     unsigned char operandA = cpu_ram_read(cpu, cpu->PC + 1);
     unsigned char operandB = cpu_ram_read(cpu, cpu->PC + 2);
+    /* printf("TRACE: current IR: %x, PC: %x\n", IR, cpu->PC); */
 
     // Switch() over it to decide on a course of action.
     switch(IR) {
@@ -168,12 +170,16 @@ void cpu_run(struct cpu *cpu)
         cpu->PC = cpu->reg[operandA];
         break;
       case JEQ:
-        if (cpu->FL == 0b00000001)
+        if (cpu->FL & 1)
           cpu->PC = cpu->reg[operandA];
+        else
+          cpu->PC += 2;
         break;
       case JNE:
-        if (!cpu->FL)
+        if (!(cpu->FL & 1))
           cpu->PC = cpu->reg[operandA];
+        else
+          cpu->PC += 2;
         break;
       case HLT:
         running = 0;
@@ -189,6 +195,8 @@ void cpu_run(struct cpu *cpu)
     // Move the PC to the next instruction if it doesn't set the PC
     if (!instruction_sets_PC)
       cpu->PC += (IR >> 6) + 1;
+
+    /* sleep(1); */
   }
 }
 
